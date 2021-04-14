@@ -80,6 +80,7 @@ export async function fetchTextChannelData(channel: TextChannel | NewsChannel, o
         const fetchOptions: ChannelLogsQueryOptions = { limit: 100 };
         let lastMessageId: Snowflake;
         let fetchComplete: boolean = false;
+        var fetched = 0;
         try {
             while (!fetchComplete) {
                 if (lastMessageId) {
@@ -108,6 +109,8 @@ export async function fetchTextChannelData(channel: TextChannel | NewsChannel, o
                         }),
                         pinned: msg.pinned
                     });
+                    console.log("Fetched message #" + fetched + ".");
+                    fetched = fetched + 1;
                 });
             }
             /* Return channel data */
@@ -198,6 +201,8 @@ export async function loadChannel(
                             .filter((m) => m.content.length > 0 || m.embeds.length > 0 || m.files.length > 0)
                             .reverse();
                         messages = messages.slice(messages.length - options.maxMessagesPerChannel);
+                        console.log("Copying " + messages.length + " total messages...");
+                        var remaining = messages.length;
                         for (const msg of messages) {
                             const sentMsg = await webhook
                                 .send(msg.content, {
@@ -209,6 +214,8 @@ export async function loadChannel(
                                 .catch((err) => {
                                     console.log(err.message);
                                 });
+                            remaining = remaining - 1;
+                            console.log(remaining + " messages left...");
                             if (msg.pinned && sentMsg) await sentMsg.pin();
                         }
                         resolve(channel); // Return the channel
